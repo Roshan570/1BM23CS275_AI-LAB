@@ -1,0 +1,95 @@
+def vacuum_world():
+    # Initialize goal state: '0' = Clean, '1' = Dirty
+    goal_state = {'A': '0', 'B': '0'}
+    cost = 0
+
+    # Get user inputs
+    location_input = input("Enter Location of Vacuum (A/B): ").upper()
+    status_input = input(f"Enter status of {location_input} (0 = Clean, 1 = Dirty): ")
+   
+    # Determine the other location
+    other_location = 'B' if location_input == 'A' else 'A'
+    status_input_complement = input(f"Enter status of {other_location} (0 = Clean, 1 = Dirty): ")
+
+    print("\nInitial Location Condition:", goal_state)
+   
+    if location_input == 'A':
+        print("Vacuum is placed in Location A")
+       
+        if status_input == '1':
+            print("Location A is Dirty.")
+            goal_state['A'] = '0'  # Clean A
+            cost += 1  # Cost for sucking dirt
+            print(f"Cost for CLEANING A: {cost}")
+
+            if status_input_complement == '1':
+                print("Location B is Dirty.")
+                print("Moving right to Location B.")
+                cost += 1  # Cost for moving right
+                goal_state['B'] = '0'  # Clean B
+                cost += 1  # Cost for sucking dirt
+                print(f"Cost after moving RIGHT and SUCK: {cost}")
+                print("Location B has been Cleaned.")
+            else:
+                print("Location B is already clean.")
+                print(f"No further action. Total cost: {cost}")
+
+        else:
+            print("Location A is already clean.")
+            if status_input_complement == '1':
+                print("Location B is Dirty.")
+                print("Moving right to Location B.")
+                cost += 1  # Cost for moving right
+                goal_state['B'] = '0'  # Clean B
+                cost += 1  # Cost for sucking dirt
+                print(f"Cost after moving RIGHT and SUCK: {cost}")
+                print("Location B has been Cleaned.")
+            else:
+                print("Location B is already clean.")
+                print(f"No action needed. Total cost: {cost}")
+
+    elif location_input == 'B':
+        print("Vacuum is placed in Location B")
+
+        if status_input == '1':
+            print("Location B is Dirty.")
+            goal_state['B'] = '0'  # Clean B
+            cost += 1  # Cost for sucking dirt
+            print(f"Cost for CLEANING B: {cost}")
+
+            if status_input_complement == '1':
+                print("Location A is Dirty.")
+                print("Moving left to Location A.")
+                cost += 1  # Cost for moving left
+                goal_state['A'] = '0'  # Clean A
+                cost += 1  # Cost for sucking dirt
+                print(f"Cost after moving LEFT and SUCK: {cost}")
+                print("Location A has been Cleaned.")
+            else:
+                print("Location A is already clean.")
+                print(f"No further action. Total cost: {cost}")
+
+        else:
+            print("Location B is already clean.")
+            if status_input_complement == '1':
+                print("Location A is Dirty.")
+                print("Moving left to Location A.")
+                cost += 1  # Cost for moving left
+                goal_state['A'] = '0'  # Clean A
+                cost += 1  # Cost for sucking dirt
+                print(f"Cost after moving LEFT and SUCK: {cost}")
+                print("Location A has been Cleaned.")
+            else:
+                print("Location A is already clean.")
+                print(f"No action needed. Total cost: {cost}")
+
+    else:
+        print("Invalid location input! Please enter either 'A' or 'B'.")
+
+    print("\nGOAL STATE:")
+    print(goal_state)
+    print(f"Performance Measurement (Total Cost): {cost}")
+
+
+# Run the vacuum_world function
+vacuum_world()
