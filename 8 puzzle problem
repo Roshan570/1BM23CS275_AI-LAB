@@ -1,0 +1,78 @@
+from collections import deque
+
+# Goal state
+GOAL = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+# Moves: Up, Down, Left, Right (index shifts in 1D list)
+MOVES = {
+    'Up': -3,
+    'Down': 3,
+    'Left': -1,
+    'Right': 1,
+}
+
+def is_valid_move(zero_pos, move):
+    if move == 'Left' and zero_pos % 3 == 0:
+        return False
+    if move == 'Right' and zero_pos % 3 == 2:
+        return False
+    if move == 'Up' and zero_pos < 3:
+        return False
+    if move == 'Down' and zero_pos > 5:
+        return False
+    return True
+
+def move_tile(state, move):
+    zero_pos = state.index(0)
+    if not is_valid_move(zero_pos, move):
+        return None
+    new_pos = zero_pos + MOVES[move]
+    new_state = state[:]
+    new_state[zero_pos], new_state[new_pos] = new_state[new_pos], new_state[zero_pos]
+    return new_state
+
+def dfs(state, depth, limit, path, visited):
+    if state == GOAL:
+        return path
+    if depth == limit:
+        return None
+
+    visited.add(tuple(state))
+    zero_pos = state.index(0)
+
+    for move in MOVES:
+        new_state = move_tile(state, move)
+        if new_state and tuple(new_state) not in visited:
+            result = dfs(new_state, depth + 1, limit, path + [move], visited)
+            if result:
+                return result
+    visited.remove(tuple(state))
+    return None
+
+def iddfs(initial_state):
+    depth = 0
+    while True:
+        visited = set()
+        result = dfs(initial_state, 0, depth, [], visited)
+        if result:
+            return result
+        depth += 1
+
+def main():
+    print("Enter the initial state of the 8 puzzle (use 0 for blank), 9 numbers separated by spaces:")
+    initial = list(map(int, input().strip().split()))
+    if len(initial) != 9 or set(initial) != set(range(9)):
+        print("Invalid input! Please enter numbers 0 to 8 exactly once.")
+        return
+
+    print("Solving... (this might take time for hard puzzles)")
+    solution = iddfs(initial)
+
+    if solution:
+        print(f"Solution found in {len(solution)} moves:")
+        print(" -> ".join(solution))
+    else:
+        print("No solution found.")
+
+if __name__ == "__main__":
+    main()
