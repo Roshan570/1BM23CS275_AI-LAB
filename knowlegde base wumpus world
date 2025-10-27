@@ -1,0 +1,59 @@
+from itertools import product
+
+# --- Define propositional symbols ---
+symbols = ['P11', 'P12', 'P21', 'P22', 'P31', 'B11', 'B21']
+
+# --- Knowledge Base represented as functions ---
+def KB(model):
+    """Return True if the model satisfies all KB sentences."""
+    if model['P11']:  # No pit at (1,1)
+        return False
+    if model['B11'] != (model['P12'] or model['P21']):  # B11 <-> P12 or P21
+        return False
+    if model['B21'] != (model['P11'] or model['P22'] or model['P31']):  # B21 <-> P11 or P22 or P31
+        return False
+    if not model['B11']:  # B11 observed
+        return False
+    if not model['B21']:  # B21 observed
+        return False
+    return True
+
+# --- TT-ENTAILS function with truth table ---
+def tt_entails_with_table(KB, query_symbol, symbols):
+    """Check entailment and display truth table."""
+    selected_rows = []
+    all_rows = []
+
+    # Generate all possible truth assignments
+    for values in product([True, False], repeat=len(symbols)):
+        model = dict(zip(symbols, values))
+        kb_val = KB(model)
+        query_val = model[query_symbol]
+        row = {**model, 'KB': kb_val, query_symbol: query_val}
+        all_rows.append(row)
+        if kb_val:
+            selected_rows.append(row)
+
+    # Display full truth table
+    print("Full Truth Table:")
+    headers = symbols + ['KB', query_symbol]
+    print("\t".join(headers))
+    for row in all_rows:
+        print("\t".join(str(row[h]) for h in headers))
+
+    # Display selected rows (where KB is True)
+    print("\nSelected Rows (KB=True):")
+    print("\t".join(headers))
+    for row in selected_rows:
+        print("\t".join(str(row[h]) for h in headers))
+
+    # Check entailment
+    entails = all(row[query_symbol] for row in selected_rows)
+    return entails
+
+# --- Query ---
+query1 = 'P12'  # Pit at (1,2)
+
+# --- Run entailment check with table ---
+result = tt_entails_with_table(KB, query1, symbols)
+print(f"\nDoes KB entail {query1}? {result}")
