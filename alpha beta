@@ -1,0 +1,64 @@
+import math
+
+# ------------------------
+# Game tree example
+# ------------------------
+# Tree structure: nested dictionaries
+# Terminal nodes have numeric values
+game_tree = {
+    'A': {
+        'B': {
+            'E': 3,
+            'F': 5
+        },
+        'C': {
+            'G': 6,
+            'H': 9
+        },
+        'D': {
+            'I': 1,
+            'J': 2
+        }
+    }
+}
+
+# ------------------------
+# Alpha-Beta pruning function
+# ------------------------
+def alpha_beta(node, alpha, beta, maximizingPlayer, tree, path=""):
+    full_path = f"{path}{node}"
+
+    if isinstance(tree, int):
+        print(f"Leaf {full_path} reached with value {tree}")
+        return tree
+
+    if maximizingPlayer:
+        value = -math.inf
+        print(f"\nMax node {full_path}: alpha={alpha}, beta={beta}")
+        for child, subtree in tree.items():
+            v = alpha_beta(child, alpha, beta, False, subtree, full_path+"->")
+            value = max(value, v)
+            alpha = max(alpha, value)
+            print(f"Max node {full_path}: value={value}, updated alpha={alpha}, beta={beta}")
+            if alpha >= beta:
+                print(f"Pruning remaining children of Max node {full_path}")
+                break
+        return value
+    else:
+        value = math.inf
+        print(f"\nMin node {full_path}: alpha={alpha}, beta={beta}")
+        for child, subtree in tree.items():
+            v = alpha_beta(child, alpha, beta, True, subtree, full_path+"->")
+            value = min(value, v)
+            beta = min(beta, value)
+            print(f"Min node {full_path}: value={value}, alpha={alpha}, updated beta={beta}")
+            if alpha >= beta:
+                print(f"Pruning remaining children of Min node {full_path}")
+                break
+        return value
+
+# ------------------------
+# Run Alpha-Beta
+# ------------------------
+best_value = alpha_beta('A', -math.inf, math.inf, True, game_tree['A'])
+print(f"\nBest value for root node A: {best_value}")
