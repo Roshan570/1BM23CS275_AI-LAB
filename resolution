@@ -1,0 +1,151 @@
+from copy import deepcopy
+
+# ===============================
+# Helper functions
+# ===============================
+
+def is_variable(x):
+    return isinstance(x, str) and x[0].islower()
+
+def unify(x, y, theta=None):
+    if theta is False:
+        return False
+    if theta is None:
+        theta = {}
+    if x == y:
+        return theta
+    if is_variable(x):
+        return unify_var(x, y, theta)
+    if is_variable(y):
+        return unify_var(y, x, theta)
+
+    if isinstance(x, tuple) and isinstance(y, tuple) and x[0] == y[0]:
+        if len(x) != len(y):
+            return False
+        for xi, yi in zip(x[1:], y[1:]):
+            theta = unify(xi, yi, theta)
+            if theta is False:
+                return False
+        return theta
+    return False
+
+def unify_var(var, x, theta):
+    if var in theta:
+        return unify(theta[var], x, theta)
+    elif x in theta:
+        return unify(var, theta[x], theta)
+    else:
+        theta2 = theta.copy()
+        theta2[var] = x
+        return theta2
+
+def apply_substitution(literal, theta):
+    if isinstance(literal, tuple):
+        return tuple([literal[0]] + [apply_substitution(arg, theta) for arg in literal[1:]])
+    else:
+        return theta.get(literal, literal)
+
+def negate(lit):
+    if lit[0] == 'not':
+        return lit[1]
+    else:
+        return ('not', lit)
+
+
+# ===============================
+# Resolution
+# ===============================
+
+def resolve(ci, cj):
+    resolvents = []
+    for di in ci:
+        for dj in cj:
+            theta = unify(di, negate(dj))
+            if theta is not False:
+                new_clause = (ci - {di}) | (cj - {dj})
+                new_clause = set([apply_substitution(l, theta) for l in new_clause])
+                resolvents.append(new_clause)
+    return resolvents
+
+def fol_resolution(clauses):
+    print("\n==== Resolution Proof Start ====\n")
+    new = set()
+
+    while True:
+        n = len(clauses)
+        pairs = [(clauses[i], clauses[j]) for i in range(n) for j in range(i+1, n)]
+        added = False
+
+        for ci, cj in pairs:
+            resolvents = resolve(ci, cj)
+            for res in resolvents:
+                print(f"Derived resolvent: {res}")
+
+                if not res:
+                    print("\n*** EMPTY CLAUSE DERIVED → QUERY PROVED! ***")
+                    return True
+
+                fz = frozenset(res)
+                if fz not in new:
+                    new.add(fz)
+                    added = True
+
+        if not added:
+            print("\nNo more new clauses → Query cannot be proved.")
+            return False
+
+        for fz in new:
+            if set(fz) not in clauses:
+                clauses.append(set(fz))
+
+
+# ===============================
+# Real-life English → FOL → CNF
+# ===============================
+
+# 1. Every human is mortal.
+#    ∀x (Human(x) → Mortal(x))
+sentence1_cnf = set([
+    ('not', ('Human', 'x')),
+    ('Mortal', 'x')
+])
+
+# 2. Socrates is a human.
+#    Human(Socrates)
+sentence2_cnf = set([
+    ('Human', 'Socrates')
+])
+
+# Query: Is Socrates mortal?
+goal = ('Mortal', 'Socrates')
+neg_goal = set([('not', goal)])  # negated for resolution
+
+
+# ===============================
+# Build knowledge base
+# ===============================
+
+kb = [
+    sentence1_cnf,
+    sentence2_cnf
+]
+
+print("\n=== REAL-LIFE KNOWLEDGE BASE (CNF) ===")
+for i, c in enumerate(kb):
+    print(f"C{i+1}: {c}")
+
+print("\nNegated Goal:")
+print(neg_goal)
+
+clauses = deepcopy(kb)
+clauses.append(neg_goal)
+
+print("\n=== CLAUSES USED IN RESOLUTION ===")
+for i, c in enumerate(clauses):
+    print(f"C{i+1}: {c}")
+
+
+# ===============================
+# Run resolution
+# ===============================
+fol_resolution(clauses)
