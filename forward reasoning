@@ -1,0 +1,60 @@
+from collections import defaultdict
+
+# ---------- FACTS ----------
+facts = {
+    "American(Robert)",
+    "Missile(T1)",
+    "Sells(Robert,T1,A)",
+    "Hostile(A)"
+}
+
+# ---------- RULES ----------
+rules = [
+    (["Missile(x)"], "Weapon(x)"),
+    (["American(x)", "Weapon(y)", "Sells(x,y,z)", "Hostile(z)"], "Criminal(x)")
+]
+
+query = "Criminal(Robert)"
+
+
+# ---------- HELPER: SUBSTITUTE VARIABLE ----------
+def substitute(expr, var, val):
+    return expr.replace(var, val)
+
+
+# ---------- FORWARD CHAINING ENGINE ----------
+def forward_chain(facts, rules, query):
+    inferred = set()
+    changed = True
+
+    while changed:
+        changed = False
+        for premises, conclusion in rules:
+            for fact in list(facts):
+
+                # extract constant inside parentheses
+                if "(" in fact:
+                    consts = fact[fact.find("(") + 1:fact.find(")")].split(",")
+
+                    # try applying substitution for each variable in premises
+                    var = "x"
+                    val = consts[0]  # first constant
+                    new_conclusion = substitute(conclusion, var, val)
+
+                    # Check if rule premises satisfied
+                    if all(substitute(p, var, val) in facts for p in premises):
+                        if new_conclusion not in facts:
+                            print(f"Inferred: {new_conclusion}")
+                            facts.add(new_conclusion)
+                            inferred.add(new_conclusion)
+                            changed = True
+
+    return query in facts
+
+
+# ---------- EXECUTION ----------
+print("Initial Facts:", facts)
+result = forward_chain(facts, rules, query)
+
+print("\nQuery:", query)
+print("Result:", "✔ PROVED" if result else "❌ NOT PROVED")
