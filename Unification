@@ -1,0 +1,67 @@
+def is_variable(x):
+    return isinstance(x, str) and x.islower()
+
+
+def occurs_check(var, expr):
+    """Check if variable appears inside expression (prevents infinite recursion)."""
+    if var == expr:
+        return True
+    if isinstance(expr, tuple):
+        return any(occurs_check(var, sub) for sub in expr[1])
+    return False
+
+
+def substitute(expr, theta):
+    """Apply substitution to expression."""
+    if isinstance(expr, str):
+        return theta.get(expr, expr)
+    elif isinstance(expr, tuple):
+        return (expr[0], [substitute(arg, theta) for arg in expr[1]])
+    return expr
+
+
+def unify(x, y, theta=None):
+    """Unify two first order logic expressions."""
+    if theta is None:
+        theta = {}
+
+    x = substitute(x, theta)
+    y = substitute(y, theta)
+
+    if x == y:
+        return theta
+
+    # Case 1: x is a variable
+    if is_variable(x):
+        if occurs_check(x, y):
+            return None
+        theta[x] = y
+        return theta
+
+    # Case 2: y is a variable
+    if is_variable(y):
+        return unify(y, x, theta)
+
+    # Case 3: Both are compound terms
+    if isinstance(x, tuple) and isinstance(y, tuple) and x[0] == y[0]:
+        for a, b in zip(x[1], y[1]):
+            theta = unify(a, b, theta)
+            if theta is None:
+                return None
+        return theta
+
+    return None
+
+
+# ---------- Example Input Expressions ----------
+# P(a, x, f(g(y)))  → ('P', ['a','x',('f',[('g',['y'])])])
+expr1 = ('P', ['a', 'x', ('f', [('g', ['y'])])])
+
+# P(z, f(z), f(u)) → ('P', ['z',('f',['z']),('f',['u'])])
+expr2 = ('P', ['z', ('f', ['z']), ('f', ['u'])])
+
+
+# Run unification
+result = unify(expr1, expr2)
+
+print("\nMost General Unifier (MGU):", result)
